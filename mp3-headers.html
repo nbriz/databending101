@@ -51,7 +51,11 @@
             dropping: (e) => { e.style.opacity = 0.5 },
             dropped: (e) => { e.style.opacity = 1 },
             error: (message) => { alert(message) }, //TODO replace w/Error Box
-            ready: (file) => { this.file = file }
+            ready: (file) => {
+              if (CU.base64ToArrayBuffer(file.data).length == 4096) {
+                alert('Dang it! having issues with that particular mp3, sorry. Want to try another one?')
+              } else this.file = file;
+             }
           })
 
         },
