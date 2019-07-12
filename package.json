@@ -1,0 +1,23 @@
+{
+  "name": "glitch-art-foundations-databending",
+  "version": "1.0.0",
+  "description": "a collection of glitch art tools and tutorials",
+  "main": "index.html",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nbriz/databending101.git"
+  },
+  "author": "Nick Briz <nbriz@brangerbriz.com>",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/nbriz/databending101/issues"
+  },
+  "homepage": "http://nickbriz.com/databending101/",
+  "dependencies": {
+    "FileUploader": "git+https://github.com/nbriz/FileUploader.git",
+    "huffmanextractor": "git+https://github.com/nbriz/HuffmanExtractor.git"
+  }
+}

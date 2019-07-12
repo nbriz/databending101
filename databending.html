@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>Databending: raw data</title>
+    <meta name="description" content="Databending: the Foundations of Gltich Art; a collection of glitch art tools and tutorials." />
+
+    <meta property="og:title" content="Databending: the Foundations of Gltich Art" />
+    <meta property="og:description" content="Databending: the Foundations of Gltich Art; a collection of glitch art tools and tutorials." />
+    <meta property="og:image" content="http://nickbriz.com/databending101/images/databending.jpg" />
+    <meta property="og:url" content="http://nickbriz.com/databending101" />
+    <meta property="twitter:card" content="summary_large_image" />
+
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="icon" href="favicon.png">
+  </head>
+  <body>
+    <section id="app" class="bg">
+
+      <div class="wrap column" style="margin-bottom: 10px">
+        <h1> databending 101 </h1>
+        <h2>step {{ sec + 1 }} /  {{sections.length}}</h2>
+        <p> {{ sections[sec] }} </p>
+        <br><br>
+        <div class="next-row">
+          <div>
+            <span v-if="sec > 0"  @click="nextStep(-1)">prev step</span>
+            <div v-else>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
+          </div>
+          <div><a href="index.html">back to index</a></div>
+          <div>
+            <span v-if="sec < sections.length - 1" @click="nextStep(1)">next step</span>
+            <div v-else>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sub-wrap" v-if="sec > 0">
+        <byte-editor ref="editor"
+          :file="fileAlias" @bytes-updated="bytesUpdated($event)" minimal="true"></byte-editor>
+      </div>
+
+      <div class="sub-wrap" v-if="sec > 0">
+        <display-image :file="file" minimal="true"></display-image>
+      </div>
+
+    </section>
+    <script src="js/libs/three.min.js"></script>
+    <script src="js/background.js"></script>
+    <script src="js/databendingscript.js"></script>
+    <script src="js/libs/vue.js"></script>
+    <script src="node_modules/FileUploader/FileUploader.js"></script>
+    <script src="js/components/components-utils.js"></script>
+    <script src="js/components/display-image.js"></script>
+    <script src="js/components/play-audio.js"></script>
+    <script src="js/components/byte-editor.js"></script>
+    <script>
+      const app = new Vue({
+        el: '#app',
+        data: {
+          sec: 0,
+          sections: DataBendingScript,
+          file: null,
+          fileAlias: null,
+          charCnt: 0,
+          pasteCnt: 0
+        },
+        methods: {
+          loadCat () {
+            let canvas = document.createElement('canvas')
+            canvas.width = 600
+            canvas.height = 400
+            let ctx = canvas.getContext('2d')
+            let cat = new Image()
+            cat.onload = () => {
+              ctx.drawImage(cat, 0, 0)
+              this.fileAlias = {
+                data: canvas.toDataURL('image/jpeg'),
+                name: 'cat.jpg',
+                type: 'image/jpeg'
+              }
+              this.file = this.fileAlias
+            }
+            cat.src = 'images/cat.jpg'
+          },
+          addChar () {
+            let add = '>>>>>>__TRY__TYPING__IN__SOME__OF__YOUR__OWN__TEXT__HERE__:)__>>>>'
+            let sub = add.substring(this.charCnt, this.charCnt + 1)
+            let txt = this.$refs.editor.ascii
+            let i = txt.indexOf(`Ñd¼¶à¾÷`)
+            let t1 = txt.substring(0, i)
+            let t2 = txt.substring(i)
+            let ntxt = `${t1} ${sub} ${t2}`
+            this.$refs.editor.$refs.ta.textContent = ntxt
+            this.charCnt++
+            this.$refs.editor.asciiEdited()
+            if (this.charCnt < add.length) {
+              setTimeout(() => this.addChar(), 200)
+            }
+          },
+          pasteChunk (chunk) {
+            let txt = this.$refs.editor.ascii
+            let i = txt.indexOf('µ¥©Öuëùtø.ä4A½¹')
+            let t1 = txt.substring(0, i)
+            let t2 = txt.substring(i)
+            let ntxt =  `${t1} ${chunk} ${t2}`
+            this.$refs.editor.$refs.ta.textContent = ntxt
+            this.pasteCnt++
+            this.$refs.editor.asciiEdited()
+            if (this.pasteCnt < 5) {
+              setTimeout(() => this.pasteChunk(chunk), 750)
+            }
+          },
+          nextStep (num) {
+            let s = this.sec + num
+            if (s === 1 && this.sec === 0) this.loadCat()
+            if (s < this.sections.length && s > -1) this.sec = s
+            if (s === 2) {
+              let time = databe.nd_1()
+              setTimeout(() => this.addChar(), time)
+            }
+            if (s === 3) {
+              let { time, chunk } = databe.nd_2()
+              setTimeout(() => this.pasteChunk(chunk), time)
+            }
+          },
+          bytesUpdated (file) {
+            this.file = file
+          },
+
+        }
+      })
+    </script>
+
+  </body>
+</html>

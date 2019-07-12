@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>Databending: code</title>
+    <meta name="description" content="Databending: the Foundations of Gltich Art; a collection of glitch art tools and tutorials." />
+
+    <meta property="og:title" content="Databending: the Foundations of Gltich Art" />
+    <meta property="og:description" content="Databending: the Foundations of Gltich Art; a collection of glitch art tools and tutorials." />
+    <meta property="og:image" content="http://nickbriz.com/databending101/images/databending.jpg" />
+    <meta property="og:url" content="http://nickbriz.com/databending101" />
+    <meta property="twitter:card" content="summary_large_image" />
+
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="icon" href="favicon.png">
+  </head>
+  <body>
+    <section id="app" class="bg">
+
+      <div class="wrap column">
+        <h1> Machine Code </h1>
+        <p>
+          Beneath the apps, the operating system and even the programming languages is just a series of numbers. When we say something is "digital", what we are saying is that it is numerically represented. But where are these numbers? How do they exist? When you are using your computer, these numbers typically exist in the form of an electrical signal. Unlike the continuous flow and varying voltages of analog signals, a digital signal contains a sequence of two discrete values, a high or supply voltage and the ground or zero volts. We can refer to these two states as on and off, true and false, <i>1</i> and <i>0</i>. When you "save" a file, these high and low voltages are trasnfered to some "non-volatile" physical medium. Anything capable of storing a series of discrete units that can maintain themselves in one of two states can be used as a digital storage medium. These units could be tiny magnetic grains on the platter of a hard drive (magnetized to store a <i>1</i> or demagnetized to store a <i>0</i>) or they could be microscopic dents on an optical disc (a "pit" representing a <i>0</i> and a "land" presenting a <i>1</i>). When this sequences of binary values, or "bits", are divided into groups we can represent larger values beyond 1 and 0. For example, a group of 8 bits, referred to as a "byte", can be used to represent any value between zero and two hundred and fifty-five, with larger groupings capable of storing even larger values (16bit, 32bit, 64bit, etc). When your computer tells you a file is 100kb (or kilobytes) that means that file is pointing to a sequence of 100,000 bytes (or 800,000 individual 1s and 0s) stored in your computer's memory.
+        </p>
+
+        <br>
+        <img src="images/digital-signal.png" alt="digital signal">
+        <p class="credit">Ruido señal digital by <a href="https://en.wikipedia.org/wiki/Signal#/media/File:Imagen_4.png" target="_blank">Mcanet</a> CC BY 3.0</p>
+        <br>
+
+        <p>
+          We typically represent numbers in Decimal also known as base10, which just means there are ten different symbols at our disposal for representing any quantity, these are <i>0, 1, 2, 3, 4, 5, 6, 7, 8, 9</i>. We can represent values larger than nine by combining these symbols in a specific order, the quantity ten can be represented like <i>10</i> which really means (1 × 10) + (0 × 1). The quantity two thousand and six hundred can be represented by <i>2600</i> which really just means (2 × 1000) + (6 × 100) + (0 × 10) + (0 × 1). Each "column" in our base10 number represents an additional power of 10. We can use that same formula to construct alternative number systems. For example, Hexadecimal (hex) or base16 contains the following symbols: <i>0, 1, 2, 3, 4, 5, 6, 7, 8, 9, A, B, C, D, E, F</i> where the letter <i>A</i>  represents ten, <i>B</i> represents eleven and <i>F</i> represents fifteen. This means each column would be an additional power of 16, so the hex value <i>4E</i> would be the same as (4 × 16) + (14 × 1) or seventy eight. If you've ever used digital imaging software like Photoshop or Gimp you've probably seen hex values used to represent colors like <i>#FF00FF</i> which is meant to be read as three bytes <i>FF, 00, FF</i> which in decimal looks like <i>255, 0, 255</i> these are the red, green and blue (RGB) channel values for the color magenta (red, green and blue being the primary colors of light).
+        </p>
+
+        <p>
+          We can apply the same formula to binary or base2, any quantity can be expressed with just the two symbols <i>1</i> and <i>0</i>, where each column is an additional power of two. The quantity seventy eight, represented in decimal as <i>78</i> (or <i>4E</i> in hex) would be <i>1001110</i> or (1 × 64) + (0 × 32) + (0 × 16) + (1 × 8) + (1 × 4) + (1 × 2) + (0 × 1). Although you only need 7 columns to represent the quantity seventy eight in binary, because values are often stored in a series of 8 bits (a byte) it's convention to add the additional (0 × 128) column like <i>01001110</i>. At this point it's likely obvious that the more symbols in your numeral system, the less needed to represent large quantities. Consider for example the largest value represented in a single byte, two hundred and fifty five, in binary it's <i>11111111</i> in decimal it's <i>255</i> and in hex it's <i>FF</i>. This is why raw data is often displayed in hex, there's less to look at.
+        </p>
+
+        <br><base-numbers></base-numbers><br>
+
+        <p>
+          This sequence of binary states, either stored on a hard drive or flowing through a digital circuit, can be used to represent all sorts of information. As mentioned earlier, a series of three bytes can represent a colored pixel in an image, but these bytes can also represent sounds, smells, haptic vibrations, anything really, so long as their is some convention or standard mapping of values. A basic example of such a mapping is ASCII or the American Standard Code for Information Interchange. ASCII defines a convention for encoding text characters, which is to say they assign numerical values to letters and other symbols. For example the value seventy eight (decimal: <i>78</i>, hex: <i>4E</i>, binary: <i>01001110</i>) is the code for the capital letter "N".
+        </p>
+
+        <br><ascii-table></ascii-table><br>
+
+        <p>
+          When you create a text file in a program like TextEdit, the characters you type are encoded as their corresponding number value from the ASCII table (or Unicode, a larger encoding table with international characters and other symbols which were not included in the original ASCII). It's these numerical values that flow as digital signals of discrete high/low voltages into your hard drive where the bits, previously an electrical current, are converted to magnetized grains on a spinning platter. When you later reopen that collection of 1s and 0s in TextEdit the application interprets those bytes to mean characters which it displays on the screen. But if you open that same sequence of bytes in another app, designed to interpret these numerical values as pixels or sounds, you get something else entirely.
+        </p>
+
+        <br><mapped-data></mapped-data><br>
+
+        <p>
+          It might be worth noting at this point that the machine code we've been talking about should not be confused with the "source code" that programmers write. When a developer or programmer is creating an app, they typically do this by writing what's referred to as source code. This is just a text file like any other text file, except that rather than writing in English, Spanish or any other traditional language, they write in a programming language like JavaScript, Python or C++. A text file with source code in it means as much to a computer as a text file with English in it. It isn't until the source code is run through a special program called a compiler (or interpreter) that this human readable source code file becomes machine code. Specifically, the source code gets converted into machine code that represents instructions to the computer, like what it should do when trying to interpret some kind of file or what it should do when the user presses this button or that one. An app is just machine code (generated from some human written source code), it's data that tells the computer what/when/how to operate on other data.
+        </p>
+
+        <p>
+          Inside a computer, close to the metal, it's all machine code. That code might represent the raw data of an image file, audio file, text file or source code. Sometimes source code gets converted into machine code, which to the computer is no longer raw data but instructions for what to do with raw data. We experience these instructions as apps which we can then use to experience the raw data in files as various forms of media. But that media, the photo, the song or the story, doesn't exist until the machine code representing it (raw data) gets passed through the machine code (instructions) meant to interpret it. This is why a "glitch" isn't contained in a hacked or databent file itself, rather the glitch only exists in the moment that file gets interpreted by some piece of software. Which is why opening up a file in an app it wasn't designed to be opened in is just as good a way of instigating a glitch as hacking a file before opening it in it's intended app.
+        </p>
+
+        <br><br>
+        <a href="index.html">back to index</a>
+      </div>
+
+    </section>
+    <script src="js/libs/three.min.js"></script>
+    <script src="js/background.js"></script>
+    <script src="js/libs/vue.js"></script>
+    <script src="js/components/components-utils.js"></script>
+    <script src="js/components/base-numbers.js"></script>
+    <script src="js/components/ascii-table.js"></script>
+    <script src="js/components/mapped-data.js"></script>
+    <script>
+      const app = new Vue({
+        el: '#app',
+        data: {
+          ready: false
+        },
+        mounted: function () {
+
+        },
+        methods: {
+
+        }
+      })
+    </script>
+
+  </body>
+</html>

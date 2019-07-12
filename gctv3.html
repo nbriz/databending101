@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>Databending: video codecs</title>
+    <meta name="description" content="Databending: the Foundations of Gltich Art; a collection of glitch art tools and tutorials." />
+
+    <meta property="og:title" content="Databending: the Foundations of Gltich Art" />
+    <meta property="og:description" content="Databending: the Foundations of Gltich Art; a collection of glitch art tools and tutorials." />
+    <meta property="og:image" content="http://nickbriz.com/databending101/images/databending.jpg" />
+    <meta property="og:url" content="http://nickbriz.com/databending101" />
+    <meta property="twitter:card" content="summary_large_image" />
+
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="icon" href="favicon.png">
+  </head>
+  <body>
+    <section id="app" class="bg">
+
+      <div class="wrap column">
+        <h1> Glitch Codec Tutorial v3</h1>
+
+        <p>
+          If you want to databend video you won't get very far opening up a video in a text editor and typing in at random. This usually results in an unplayable file. That said, you can get away with hacking at the raw bytes in a hex editor, but small changes won't make much of a difference as replacing a single byte constitutes a much smaller edit in a video than in an image (the former usually being a much larger file). So you'll need to make large changes, like using the find and replace functionality to swap large numbers of bytes across the entire file. That said, as explained in the <a href="mp3-headers.html">avoiding MP3 frame headers</a> page, this can quickly result in swapping bytes that result in an unplayable file. Still, you can achieve some interesting results with enough patience and trial and error. That said, back in 2009 while working closely with my graduate advisers Ben Chang and Jon Cates, I wondered if it would be possible to hack the video codecs themselves rather than the video file.
+        </p>
+
+        <p>
+          A codec (or coder-decoder) is a program (or part of a program) that creates and interprets media files. I've mentioned multiple times throughout these appendices that media files are rarely ever one-to-one mappings of bytes like a text file is (with our <a href="bmp.html">uncompressed BMP file</a> being a rare exception), instead they take the raw bytes (pixels, sound buffers, etc) and encode them into a smaller compressed series of bytes, which keeps the over all file size small. There are different methods and philosophies for how best to maintain the integrity of the original data while using as few bytes as possible. Techniques like Huffman encoding (see my <a href="huffman-hacking.html">Huffman hacking</a> page) are used to represent information with less bits than would be by default (for example every instance of this byte <i>01100011</i> might become <i>010</i>), other techniques involve removing certain colors from an image or video we're not likely to notice are missing or removing certain frequencies from a sound, like particularly high or low frequencies human's aren't great at picking up anyway. Some techniques are unique to video, for example inter-frame coding, which is a form of temporal compression where frames are compared to the ones that come before it so that they can "borrow" from the predecessor's pixel info and only store the differences. The glitch art style known as "datamoshing" exploits this particular form of compression by removing the "i-frames" (the initial references frames) such that subsequent frames borrow pixels from the wrong reference frame, or by duplicating frames multiple times so that each frame keeps borrowing the same set of offset pixels such that it creates a "pixel bleeding" or "blooming" effect.
+        </p>
+
+        <p>
+          In 2010 I created the first release of my <a href="https://www.youtube.com/watch?v=hOemlx2sBIo&list=PLE7F731BE271DC5D4" target="
+          ">Glitch Codec Tutorial</a>, where I cloned a copy of my operating system (Ubuntu Linux) onto a series of DVDs which I used to conduct a series of workshops. Participants would stick the DVDs into their laptops and restart their computers, rather than booting into their operating system (stored on their hard drive) they would boot into mine stored on the DVD. Everyone essentially had a copy of my desktop, setup for hacking video codecs, on their machines. This meant rather than databending the video files, we could hack the code that creates those videos files, such that every video we ran through the hacked compression algorithms would by default come out glitched. In 2011 I created an online version of the Glitch Codec Tutorial allowing participants to download an .ISO file which they could burn onto a DVD themselves and follow the workshop through a series of online videos. Needless to say, DVDs became obsolete soon after, and though I updated the tutorial to run off of a USB stick the operating system I was using back then (a very old version of Ubuntu at this point) also became obsolete and eventually stopped working on most systems.
+        </p>
+
+        <div>
+          <img src="images/gct.jpg" alt="Glitch Codec Tutorial">
+        </div>
+
+        <p>
+          The purpose of creating the DVD/USB was to make it easier for beginners to jump into hacking video codecs, but it ultimately made it very difficult to maintain. I now regularly get emails from disappointed glitch artists who can no longer get the ISO running on their computers. For that reason I've decided to create this update to the Glitch Codec Tutorial, where rather than sharing an "easy to get started" (but difficult to maintain) ISO of my preconfigured environment, I'll share the process for how to replicate this configuration on your own computer. This will make this version of the Glitch Codec Tutorial much more sustainable, but comes with the trade off of no longer being beginner friendly. As such this is more of an intermediate level tutorial which requires knowledge of the command line. If you're unfamiliar with the command line (aka terminal) I have <a href="http://netart.rocks/notes/commandline" target="_blank">introductory notes</a> on another one of my class websites. In any event, I'll do my best to be clear and verbose rather than assuming you have years of experience working in a terminal. That said, I will be assuming you are in a Unix-style terminal, this is the default on Mac and Linux. On Windows the default is the "command prompt" but modern versions of Windows now come with a Linux or bash terminal preinstalled (if not <a href="https://docs.microsoft.com/en-us/windows/wsl/install-win10" target="_blank">you can install it</a>).
+        </p>
+
+        <br><h3>THE SETUP</h3>
+
+        <p>
+          In addition to having an app for writing code (like <a href="https://atom.io/" target="_blank">Atom</a>, <a href="https://www.sublimetext.com/" target="_blank">Sublime</a> or <a href="https://code.visualstudio.com/" target="
+          ">VSCode</a>) you'll need to have a couple of command line apps installed before we begin. You'll need <a href="https://git-scm.com/" target="_blank">git</a>, a version control system programmers use to track changes to their projects. We won't be doing much programming but git is also used to download the source code (see the page on <a href="machine-code.html">machine code</a> if you're not familiar with the concept of source code) of open source software projects, which is what we'll be using it for. You will also need to install <a href="https://yasm.tortall.net/" target="_blank">yasm</a>, a tool for compiling source code into machine code (an app we can run). To check if you've already got these installed you can launch a terminal and run <i>git --version</i> as well as <i>yasm --version</i>, if these commands both return a version number, than you have them installed, if instead you get some kind of error like "command 'yasm' not found", then you need to install them. On Mac and Windows you can install git by downloading an installer from the <a href="https://git-scm.com/" target="_blank">git website</a>, on Linux you can use the terminal <i>sudo apt-get install git</i>. Yasm can be installed the same way on Linux, <i>sudo apt-get install yasm</i>. I assume (though have not tested) that if you're using the new Linux terminal in Windows you can install it the same way (in fact I'll be assuming for the remainder of this tutorial that the Linux instructions translate over to the new built in Linux terminal in Windows). On Mac you can install yasm using <a href="https://brew.sh/" target="_blank">homebrew</a> (but if you don't already have homebrew you'll need to install that as well).
+        </p>
+
+        <p>
+          Once you have those two dependencies installed on your system we can move onto the next step of downloading and compiling the source code for <a href="https://ffmpeg.org/" target="_blank">FFmpeg</a>, a command line program for working with media files. FFmpeg is used regularly by programmers to convert videos from one file type to another, but it's also capable of doing pretty much anything any graphical video editing program is capable of doing. In fact, I know many graphical video apps that use FFmpeg underneath the hood. We won't be using any of FFmpeg's fancy video editing functionality though, we just want to use it to run videos through codecs. FFmpeg is also open source, which means the original source code for the application is available for us to work with. This is key, because we'll be hacking the codecs (which are themselves part of the FFmpeg source code) and then compiling a version of FFmpeg with those hacked codecs built right in.
+        </p>
+
+        <p>
+          We're going to download the FFmpeg source code using git in the terminal, but it's important that your terminal is currently inside the folder you want to download FFmpeg into. You can check what folder (aka directory) you are inside of by running <i>pwd</i> (which stands for "present working directory") in your terminal. If that's not the folder you want to be in, you can use <i>cd</i> to "change directory". For example, say you want to work on your desktop, we can 'cd' into it by running <i>cd /home/username/Desktop</i> on Linux or <i>cd /Users/username/Desktop</i> on Mac (where you would replace "username" with your own username). Once there, it would be a good idea to create a folder for all the work we're going to do, let's call it "gct3" (for this new v3 of the Glitch Codec Tutorial), you can create that folder like you always do, or you coul use the terminal <i>mkdir gct3</i>. Once created let's 'cd' into this new folder <i>cd gct3</i>.
+        </p>
+
+        <p>
+          Once inside the gct3 folder (use <i>pwd</i> to confirm), we can download the FFmpeg source code:
+        </p>
+
+        <code>
+          git clone https://git.ffmpeg.org/ffmpeg.git
+        </code>
+
+        <p>
+          When it's finished downloading you should see a folder called "ffmpeg" inside gct3. Next we'll create another couple of folders, one called "glitchcodec" (<i>mkdir glitchcodec</i>) and another called "bin" (<i>mkdir bin</i>). Your gct3 folder should now have those three folders inside it. We're now ready to compile FFmpeg, cd into the ffmpeg folder <i>cd ffmpeg</i> once there we'll run the configuration file like this:
+        </p>
+
+        <code>
+          ./configure --enable-nonfree --prefix=/home/username/Desktop/gct3/glitchcodec
+        </code>
+
+        <p>
+          Or like this on Mac (in both cases, replacing "username" with your own username like before):
+        </p>
+
+        <code>
+          ./configure --enable-nonfree --prefix=/Users/username/Desktop/gct3/glitchcodec
+        </code>
+
+        <p>
+          Once the configuration has finished run <i>make</i>, this process will take a few minutes. Once complete run <i>make install</i> which should take a little less time. Then when that's finished you should see that some new folders were created inside the "glitchcodec" folder. If not you may have mistyped something in the initial configuration step. You can revisit commands you previously entered into your terminal by pressing the up arrow. Check and see the configure command from before and compare it closely to the command above (make sure you have the path correct for your particular system, it should match the output of <i>pwd</i>, replacing the last part "ffmpeg" with "glitchcodec"). Assuming the new folders did get created inside your glitchcodec folder the last thing we need to do to complete our setup is create a symlink inside our gct3/bin folder to our complied "glitchcodec" app like this:
+        </p>
+
+        <code>
+          ln -s /home/username/Desktop/gct3/glitchcodec/bin/ffmpeg /home/username/Desktop/gct3/bin/glitchcodec
+        </code>
+
+        <p>
+          Or like this on Mac (again, replacing "username" with your own username):
+        </p>
+
+        <code>
+          ln -s /Users/username/Desktop/gct3/glitchcodec/bin/ffmpeg /Users/username/Desktop/gct3/bin/glitchcodec
+        </code>
+
+        <br><h3>HACKING VIDEO CODECS</h3>
+
+        <p>
+          Now comes the fun part! We've finished reproducing the Glitch Codec Tutorial environment (which I used to distribute on the DVD) on our own computer, the "intermediate" phase is done and at this point you could follow along the same steps I lay out in <a href="https://www.youtube.com/watch?v=hOemlx2sBIo&list=PLE7F731BE271DC5D4" target="
+          ">the original video series</a>. But since you're here, let's keep going. Before we glitch stuff, it's always a good idea to make sure things are working like they're suppose to. Let's cd into the bin folder, assuming you are still inside the ffmpeg folder you can run <i>cd ../bin</i> to go back a directory and then into bin. You'll also want to copy some video files into the bin folder, or download some off the internet. There are loads of online tools and browser plugins for downloading videos from streaming sites like YouTube, but because we're using the terminal I'll recommend <a href="https://ytdl-org.github.io/youtube-dl/index.html" target="_blank">youtube-dl</a>, my favorite command line tool for downloading videos from the Internet. Let's assume you have a video called "cat.mp4" inside your bin folder (which is your present working directory or pwd), run the following:
+        </p>
+
+        <code>
+          ./glitchcodec -i cat.mp4 cat2.mp4
+        </code>
+
+        <p>
+          After a bit of processing (the longer the video file the longer this takes) you should see a new file called "cat3.mp4" appear inside your bin folder. If it plays exactly the same as the original cat.mp4 than things are working! At this moment our "glitchcodec" app is exactly the same as ffmpeg (you can run any/all ffmpeg commands with it).
+        </p>
+
+        <p>
+          We can now start hacking the codec source files. Using a code editor (like Atom, Sublime or VSCode) open up a file called "h263data.c" located inside the libavcodec folder of the ffmpeg folder (<i>gct3/ffmpeg/libavcodec/h263data.c</i>) this codec file, written in the programming language C, is used by default when compressing .mp4 files. You should notice various sections with numbers in them like lines 34 and 35 which look like:
+        </p>
+
+        <code>
+          const uint8_t ff_h263_intra_MCBPC_code[9] = { 1, 1, 2, 3, 1, 1, 2, 3, 1 };
+          <br>
+          const uint8_t ff_h263_intra_MCBPC_bits[9] = { 1, 3, 3, 3, 4, 6, 6, 6, 9 };
+        </code>
+
+        <p>
+          Go ahead and change some of those numbers at random. Now that we've made a change to the source we'll need to recompile our glitchcodec, rather than having to cd back and fourth between our bin folder and our ffmpeg folder it might be a good idea to open a second terminal where the pwd is ffmpeg and keep your other terminal inside of bin. In the terminal with ffmpeg as the pwd run <i>make install</i> to recompile the glitchcodec. Then back in the terminal with bin as the pwd let's run the same command from before:
+        </p>
+
+         <code>
+           ./glitchcodec -i cat.mp4 cat2.mp4
+         </code>
+
+        <p>
+          This time our cat2.mp4 video should have been automatically glitched! If it's not, you may need to change a few more of those numbers inside the h263data.c file. We can now repeat this process hacking some of the other codecs inside of ffmpeg/libavcodec. For example we can hack the prores codec (<i>ffmpeg/libavcodec/proresdata.c</i>), then like before recompile in the ffmpeg terminal <i>make install</i> and then in the bin terminal, we can run our cat video through this particular codec (instead of the default h263) by selecting it like this (note the .mov extension on the output file):
+        </p>
+
+        <code>
+          ./glitchcodec -i cat.mp4 -c:v prores cat3.mov
+        </code>
+
+        <p>
+          That's pretty much it, you can now keep repeating this process, hacking the source code of a particular codec, recompiling the app and running a video through it.
+        </p>
+
+        <br><br>
+        <a href="index.html">back to index</a>
+      </div>
+
+    </section>
+
+    <script src="js/libs/three.min.js"></script>
+    <script src="js/background.js"></script>
+  </body>
+</html>

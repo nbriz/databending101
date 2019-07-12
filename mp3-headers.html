@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>Databending: MP3 files</title>
+    <meta name="description" content="Databending: the Foundations of Gltich Art; a collection of glitch art tools and tutorials." />
+
+    <meta property="og:title" content="Databending: the Foundations of Gltich Art" />
+    <meta property="og:description" content="Databending: the Foundations of Gltich Art; a collection of glitch art tools and tutorials." />
+    <meta property="og:image" content="http://nickbriz.com/databending101/images/databending.jpg" />
+    <meta property="og:url" content="http://nickbriz.com/databending101" />
+    <meta property="twitter:card" content="summary_large_image" />
+
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="icon" href="favicon.png">
+  </head>
+  <body>
+    <section id="app" class="bg">
+      <div class="wrap column">
+        <h1> Avoiding MP3 Frame Headers</h1>
+        <p>
+          If you have ever tried to databend an MP3 file in a text editor you might have been disappointed by the results — which is often just an unplayable file. MP3 files organize data into a series of "frames" each starting with their own header, which means the headers are distributed throughout the file and thus the chances of corrupting it beyond interpretation are much higher. This page allows you to <span class="clickable">upload</span> (or drag and drop) an MP3 file to analyze it's data and identify what it's frame header looks like. You can use this information to avoid hacking the frame headers when databending an Mp3 file in your own hex editor. You can also use the "find and replace" tool below which avoids manipulating any of the bytes in the frame headers, resulting in an always playable glitched MP3.
+        </p>
+        <a href="index.html">back to index</a>
+      </div>
+
+      <div class="sub-wrap">
+        <mp3-hacker :file="file"></mp3-hacker>
+      </div>
+
+    </section>
+    <script src="js/libs/three.min.js"></script>
+    <script src="js/background.js"></script>
+    <script src="js/libs/vue.js"></script>
+    <script src="node_modules/FileUploader/FileUploader.js"></script>
+    <script src="js/components/components-utils.js"></script>
+    <script src="js/components/mp3-hacker.js"></script>
+    <script>
+      const app = new Vue({
+        el: '#app',
+        data: {
+          uploader: null,
+          file: null
+        },
+        mounted: function () {
+
+          this.uploader = new FileUploader({
+            click: '.clickable',
+            drop: '.bg',
+            types: ['audio/mpeg3', 'audio/mpeg'],
+            dropping: (e) => { e.style.opacity = 0.5 },
+            dropped: (e) => { e.style.opacity = 1 },
+            error: (message) => { alert(message) }, //TODO replace w/Error Box
+            ready: (file) => { this.file = file }
+          })
+
+        },
+        methods: {
+
+        }
+      })
+    </script>
+
+  </body>
+</html>

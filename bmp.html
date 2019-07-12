@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>Databending: BMP from scratch</title>
+    <meta name="description" content="Databending: the Foundations of Gltich Art; a collection of glitch art tools and tutorials." />
+
+    <meta property="og:title" content="Databending: the Foundations of Gltich Art" />
+    <meta property="og:description" content="Databending: the Foundations of Gltich Art; a collection of glitch art tools and tutorials." />
+    <meta property="og:image" content="http://nickbriz.com/databending101/images/databending.jpg" />
+    <meta property="og:url" content="http://nickbriz.com/databending101" />
+    <meta property="twitter:card" content="summary_large_image" />
+
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="icon" href="favicon.png">
+  </head>
+  <body>
+    <section id="app" class="bg">
+
+      <div class="wrap column">
+        <h1> Creating an Image File from Scratch </h1>
+        <p>
+          In this section I'm going to walk you through creating an image file from scratch. Though it wouldn't be accurate to call this databending or glitch art, it isn't exactly programming either. In fact if you told a programmer that you created an image from scratch, one byte at a time, they would probably think you were crazy, and maybe you are a little crazy. This is a somewhat masochistic endeavor, but personally I've found learning to write files from scratch (a task usually reserved for a class of programs known as "encoders") has helped me to better understand the nature of files which in turn has given mean loads of ideas for how to break them in interesting ways. What follows is an updated version of a blog post I wrote for Art 21 back in 2011.
+        </p>
+
+        <p>
+          There are many different kinds of image files, JPG, PNG, GIF, etc. Each encodes the pixel data differently, usually in an effort to maintain the integrity of the image while also making the file as small as possible (ie. contain as few bytes of data as possible). This is known as lossy compression and it's astronomically tedious to do by hand (though perhaps I'll try to write that tutorial one day). So instead, we'll opt for creating a BMP file, which is a very simple image file format where there usually exists a one-to-one mapping between the bytes in the file and the pixels on the screen. That said, it's worth noting that for the purposes of glitch art, I personally find the compression artifacts that result from databending a file type with fancier encoding/compression algorithms more aesthetically interesting. On the surface a JPG, PNG and BMP file might all look the same, but because their data is encoded differently, when that data gets corrupted they glitch very differently. Glitch artist Rosa Menkman has documented different image file type artifacts in her pdf the <a href="https://www.slideshare.net/r00s/lofi-rosa-menkman-a-vernacular-of-file-formats"  target="_blank">Vernacular of File Formats</a>. Similarly Evan Meany’s <a href="http://www.evanmeaney.com/ceibas/" target="_blank">Ceibas Cycle</a> project contains case studies for different video file type artifacts (you will need Flash player enabled on your browser).
+        </p>
+
+        <h3>HEX EDITOR SETUP</h3>
+
+        <p>
+          In order to create a file from raw bytes we will need a hex editor. A hex editor is a tool that allows you to view and edit the raw data of any file. They're typically used by programmers for debugging, often when a file has been unintentionally corrupted. Naturally, glitch artist typically use them for intentionally corrupting files and we'll be using them for the ridiculous task of creating a file from scratch. There are loads of free hex editors out there you can download. The first hex editor I used was <a href="https://www.sweetscape.com/010editor/" target="_blank">010 Editor</a> on Windows, later, <a href="http://ridiculousfish.com/hexfiend/" target="_blank">HexFiend</a> on Mac and <a href="https://wiki.gnome.org/Apps/Ghex" target="_blank">GHex</a> on Linux. Most hex editors will let you start create a new file, but because their purpose is typically to inspect or edit files, some require an pre-existing file to start with. This is the case with GHex on Linux for example, so you'll want to create an empty file first (by running <i>touch test.bmp</i> in the terminal for example). Once you've got your hex editor open you'll need to make sure the mode is set correctly. Again, because of a hex editor's typical usage, the default mode tends to be either "ready only" or "overwrite", which allows you to edit the bytes that are there, but not add or create new ones. We want to create new bytes, so we'll need to make sure our editor's mode is set to allow that, on HexFiend you can find this in the Edit menu, under Mode &gt; Insert, in GHex you can toggle this on under Edit &gt; Insert Mode. Lastly, in order to make it easier to follow along with this tutorial, you want to make sure you editor is set to display bytes as individual units rather than grouping them together. In HexFiend this can be found in the Views menu, under Byte Grouping &gt; Single, in GHex it's in the View menu, under Group Data As &gt; Bytes. I haven't used 010 Editor (or any Windows based hex editor) in a while, but it should have similar menus for you to poke around through and adjust to similar settings.
+        </p>
+
+        <br><h3>THE IMAGE HEADER</h3>
+
+        <p>
+          With the exception of extremely simple text file formats (like .txt) most files organize their data into two separate sections the "head" (aka the "header") and the "body" (aka the "payload"). The body contains the data, in the case of our BMP image that'll be the actual pixel values, while the header contains the meta-data, that is the data about the data. Most importantly, this is information like what kind of image this is (JPG, PNG, GIF, etc.), what kind of compression it's using and what the dimensions of the image are (width and height, to the computer this is just a one dimensional list of values after all). But the header can also contain all sorts of meta-data, in the case of an image this can contain information about where the image was taken (GPS/location data), who took the image, when (date/time) they took that image, whether the image has a copyright, etc. Headers are typically contained at the top of the file, which is to say the first set of bytes are the header, followed by all the bytes that belong to the body. Though it's worth noting this isn't always the case, for example an MP3 file organizes it's data as a series of "frames" each with it's own header and payload. However in our case of the BMP file (as with most image file formats) the header comes first.
+        </p>
+
+        <p>
+          We'll start with the "magic numbers", this is what we call the first bytes which tell the program interpreting our file what type of image it is, for a JPG that's <i>FF D8</i> (followed by an additional 2 bytes which can vary), for a PNG that's <i>89 50 4E 47</i>, for a GIF that's <i>47 49 46 38</i> and for a BMP it's simply <i>42 4D</i> which is what we'll start with. The next four bytes of our header are reserved for the file's size, we're going to be making a BMP file that has a total of seventy-eight bytes in it, which is <i>4E</i> in hex, but because that only takes a single byte we'll zero out the remaining three, and write <i>4E 00 00 00</i>. The next four bytes are reserved for app specific information (ie. info put there by the app that generated the BMP file), but we're making this from scratch so we'll just zero those out as well and write <i>00 00 00 00</i>. The next four bytes are used to specify the offset for the pixel array, meaning how many bytes proceed the first byte which represents a pixel (another way to look at it is how many bytes are contained in our header), we've only got ten bytes in our header so far, but when we're done we'll have fifty-four in total, that's <i>36</i> in hex, so we'll write <i>36 00 00 00</i>. So far our file should look like this:
+        </p>
+
+        <p class="hex-demo">
+          <b class="red">42 4D</b><b class="purple">4E 00 00 00</b><b class="yellow">00 00 00 00</b><b class="purple">36 00 00 00</b>
+        </p>
+
+        <p>
+          The colors here don't mean anything in particular, they're just there to be able to more easily visualize the different sections. Continuing on, we now begin the portion of our header known as the DIB (device-independent bitmap) which begins with four bytes declaring the size of the rest of the header, considering we said before that our header would be a total of fifty-four bytes and we've already used fourteen of them, what remains is forty, or <i>28</i> in hex, so we'll write <i>28 00 00 00</i>. Next we need to declare the width and height of our image, we'll be making an image that's four pixels wide by two pixels high. I realize that's very tiny, but we're typing this all from scratch so let's keep things reasonable. The next four bytes are for the width, which we said is four pixels so we'll write <i>04 00 00 00</i>, followed by four bytes for the height, which we said is two pixels so we'll write <i>02 00 00 00</i>. Next are two bytes declaring the color planes <i>01 00</i> followed by two bytes declaring the number of bits used per pixel <i>18 00</i> (that's 24 in decimal, 8bits, or a byte, for the red channel, another 8bits for the green and another 8bits for the blue). The next four bytes specify the compression method, we're not going to use any so we'll zero these out <i>00 00 00 00</i>. The next four bytes specify the size of our body, the actual array of pixel values which will follow our header. I said before our total file size would be seventy-eight bytes and we know our header will contain a total of fifty-four bytes, that means our pixel array is going to be 24 pixels (the remainder), so we'll write that in hex <i>18 00 00 00</i>. Considering that we've got a four by two set of pixels (eight total pixels) and each contains three bytes (red green and blue values) eight times three is twenty-four, so our math checks out. Our header currently looks like this:
+        </p>
+
+        <p class="hex-demo">
+          <b class="red">42 4D</b><b class="purple">4E 00 00 00</b><b class="yellow">00 00 00 00</b><b class="purple">36 00 00 00</b><b class="purple">28 00 00 00</b><b class="blue">04 00 00 00</b><b class="blue">02 00 00 00</b><b class="orange">01 00 18 00</b><b class="yellow">00 00 00 00</b><b class="purple">18 00 00 00</b>
+        </p>
+
+        <p>
+          At this point, it should be clear why we generally avoid messing with the header of an image when databending a file (say for example databending an image file in a text editor). Headers are a very precisely constructed set of bytes with specific sizes. Even when we're not using a particular area of the header (say the compression info in our case) we still need to add the corresponding bytes for length (they're just zeroed out). Because the header contains the information the app needs in order to decode the payload (the pixel data in the body), randomly swapping bytes in this area typically results in a file that can't be open. But as you'll see in the <a href="huffman-hacking.html">Huffman Hacking</a> page, when you know what you're looking for in the header, editing specific bytes can lead tom some interesting hacks.
+        </p>
+
+        <p>
+          If you're keeping count of our total bytes, you'll notice we only have thirty-eight bytes in our header so far, and I said before we'd have a total of fifty-four, this means we've got sixteen-bytes left to complete our header. These are used for various miscellaneous info like print resolution and color palette info, but we don't need any of this, so we can zero these remaning sixteen bytes out by default, leaving our completed header looking like:
+        </p>
+
+        <p class="hex-demo">
+          <b class="red">42 4D</b><b class="purple">4E 00 00 00</b><b class="yellow">00 00 00 00</b><b class="purple">36 00 00 00</b><b class="purple">28 00 00 00</b><b class="blue">04 00 00 00</b><b class="blue">02 00 00 00</b><b class="orange">01 00 18 00</b><b class="yellow">00 00 00 00</b><b class="purple">18 00 00 00</b><b class="yellow">00 00 00 00</b><b class="yellow">00 00 00 00</b><b class="yellow">00 00 00 00</b><b class="yellow">00 00 00 00</b>
+        </p>
+
+        <p>
+          With our header complete, it's now time to move onto our "payload" or the body of the file, which in our case, of a BMP file, is an array of pixel values.
+        </p>
+
+        <br><h3>THE PIXEL ARRAY</h3>
+
+        <p>
+          We declared earlier in our header that our BMP file is going to be four pixels wide by two pixels tall, this means we'll have two rows and we'll be starting with the bottom one first. Let's make a BMP where the top row of pixels are red, green, blue then white, and the bottom row pixels are cyan, magenta, yellow and black. Because we start with the last row first, our first pixel will be the cyan pixel, and because our color bytes are written BGR rather than RGB, we'll write <i>FF FF 00</i>, rather than the way we might normally define magenta in digital imaging software, usually something like <i>#00FFFF</i>. After that we've got our magenta pixel <i>FF 00 FF</i>, followed by our yellow pixel <i>00 FF FF</i> and lastly our black pixel <i>00 00 00</i>, our file should currently look like this:
+        </p>
+
+        <p class="hex-demo">
+          <b class="red">42 4D</b><b class="purple">4E 00 00 00</b><b class="yellow">00 00 00 00</b><b class="purple">36 00 00 00</b><b class="purple">28 00 00 00</b><b class="blue">04 00 00 00</b><b class="blue">02 00 00 00</b><b class="orange">01 00 18 00</b><b class="yellow">00 00 00 00</b><b class="purple">18 00 00 00</b><b class="yellow">00 00 00 00</b><b class="yellow">00 00 00 00</b><b class="yellow">00 00 00 00</b><b class="yellow">00 00 00 00</b><b class="green">FF FF 00</b><b class="green">FF 00 FF</b><b class="green">00 FF FF</b><b class="green">00 00 00</b>
+        </p>
+
+        <p>
+          With the last row complete, we'll move up and write out the pixel values for the first row. We'll start with a red pixel <i>00 00 FF</i> (remember, the pixel values are backwards, so the red channel is the last of the three bytes), followed by our green pixel <i>00 FF 00</i>, then our blue pixel <i>FF 00 00</i> and lastly our white pixel <i>FF FF FF</i>.
+        </p>
+
+        <p class="hex-demo">
+          <b class="red">42 4D</b><b class="purple">4E 00 00 00</b><b class="yellow">00 00 00 00</b><b class="purple">36 00 00 00</b><b class="purple">28 00 00 00</b><b class="blue">04 00 00 00</b><b class="blue">02 00 00 00</b><b class="orange">01 00 18 00</b><b class="yellow">00 00 00 00</b><b class="purple">18 00 00 00</b><b class="yellow">00 00 00 00</b><b class="yellow">00 00 00 00</b><b class="yellow">00 00 00 00</b><b class="yellow">00 00 00 00</b><b class="green">FF FF 00</b><b class="green">FF 00 FF</b><b class="green">00 FF FF</b><b class="green">00 00 00</b><b class="green">00 00 FF</b><b class="green">00 FF 00</b><b class="green">FF 00 00</b><b class="green">FF FF FF</b>
+        </p>
+
+        <p>
+          Our BMP is now complete! We've officially created an image file from scratch writing out all seventy-eight bytes of machine code one at a time (count them, they're all there)! For convenience and experimentation I've included an interactive version of our BMP file below. You can adjust any of the byte values and watch the image file update below. Note that this is a tiny four pixel by 2 pixel file, so the demo below is displaying the image very very zoomed in. It's also worth noting that when you drastically zoom into an image most apps willapply some kind of anti-aliasing, which means rather than showing you the individual pixels it will process the image such that the lines separating each pixel become blurred. This is done to make low-res images seem higher-res. But we want to see the individual pixels so I've removed anti-aliasing from the demo below (though you can click here to <span class="clickable" @click="toggleAntiAlias">toggle</span> it if you're curious).
+        </p>
+
+          <br>
+          <img :src="data" :class="{ antialias: toggled }" style="width:500px; border:4px solid #fff">
+          <br><br>
+          <byte-editor default="hex" :file="{data:bmp}" @bytes-updated="bytesUpdated($event)" minimal="true"></byte-editor>
+          <br><br>
+
+
+        <p>
+          Obviously, this is the simplest image you could create from scratch. Other image file formats are much more complex and even a BMP file can get more complicated than (we haven't talked about alpha channels yet). Considering that our goal here is to gain a basic understanding of what the raw data of a media file looks like, what all the pieces are and how they're arranged, I think our job here is done. But if you're curious, the <a href="https://en.wikipedia.org/wiki/BMP_file_format" target="_blank">wikipedia page for BMP</a> dives much deeper than I have. Wikipedia is generally a great place for learning the internals of any file format. That said, there is one extra bit of info I'll touch on regarding BMP file structures. I intentionally chose to create a BMP file that was four pixels wide, because that would end up being twelve bytes per row (four pixels times three bytes each). Twelve is a multiple of four and in BMP files each row must contain a number of bytes that is a multiple of four. When it's not, you need to add "padding" to the end of it. So say for example you've got a BMP image that's two pixels wide, that's a total of six bytes per row and six is not a multiple of four. The next closest multiple is eight, so you'll need to add two bytes of padding to the end of that row <i>00 00</i>. Or say for example we modified our BMP file such that we removed the last pixel from each row (the white and black pixels), this would mean our image is now three pixels wide, which results in a row of nine bytes. The next closes multiple would be twelve, so we'll have to add three bytes of padding to each row <i>00 00 00</i> like the example below:
+        </p>
+
+        <p class="hex-demo">
+          <b class="red">42 4D</b><b class="purple">4E 00 00 00</b><b class="yellow">00 00 00 00</b><b class="purple">36 00 00 00</b><b class="purple">28 00 00 00</b><b class="blue">04 00 00 00</b><b class="blue">02 00 00 00</b><b class="orange">01 00 18 00</b><b class="yellow">00 00 00 00</b><b class="purple">18 00 00 00</b><b class="yellow">00 00 00 00</b><b class="yellow">00 00 00 00</b><b class="yellow">00 00 00 00</b><b class="yellow">00 00 00 00</b><b class="green">FF FF 00</b><b class="green">FF 00 FF</b><b class="green">00 FF FF</b><b class="yellow">00 00 00</b><b class="green">00 00 FF</b><b class="green">00 FF 00</b><b class="green">FF 00 00</b><b class="yellow">00 00 00</b>
+        </p>
+
+        <a href="index.html">back to index</a>
+      </div>
+    </section>
+    <script src="js/libs/three.min.js"></script>
+    <script src="js/background.js"></script>
+    <script src="js/libs/vue.js"></script>
+    <script src="js/components/components-utils.js"></script>
+    <script src="js/components/byte-editor.js"></script>
+    <script>
+
+
+      const app = new Vue({
+        el: '#app',
+        data: {
+          bmp: 'data:image/bmp;base64,Qk1OAAAAAAAAADYAAAAoAAAABAAAAAIAAAABABgAAAAAABgAAAAAAAAAAAAAAAAAAAAAAAAA//8A/wD/AP//AAAAAAD/AP8A/wAA////',
+          data: null,
+          toggled: true
+        },
+        mounted: function () {
+          this.data = this.bmp
+        },
+        methods: {
+          bytesUpdated (file) {
+            this.data = file.data
+          },
+          toggleAntiAlias () {
+            this.toggled = !this.toggled
+          }
+        }
+      })
+    </script>
+
+  </body>
+</html>

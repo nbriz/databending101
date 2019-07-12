@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>Databending: raw data</title>
+    <meta name="description" content="Databending: the Foundations of Gltich Art; a collection of glitch art tools and tutorials." />
+
+    <meta property="og:title" content="Databending: the Foundations of Gltich Art" />
+    <meta property="og:description" content="Databending: the Foundations of Gltich Art; a collection of glitch art tools and tutorials." />
+    <meta property="og:image" content="http://nickbriz.com/databending101/images/databending.jpg" />
+    <meta property="og:url" content="http://nickbriz.com/databending101" />
+    <meta property="twitter:card" content="summary_large_image" />
+
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="icon" href="favicon.png">
+  </head>
+  <body>
+    <section id="app" class="bg">
+
+      <div class="wrap column" style="margin-bottom: 10px">
+        <h1> raw data <br> playground </h1>
+        <p>
+          This tool allows you to <span class="clickable">upload</span> (or drag and drop) an audio, text or image file onto this page and see how it is interpreted by three different custom apps: an audio player, a text editor and an image viewer. Unlike most apps which will display an error message when trying to open a file type which it wasn't designed to open, the apps below will attempt to decode the file regardless. <span style="border-bottom: 1px solid #fff; cursor:pointer;" @click="toggleExpand()">{{ expandText }}</span>
+        </p>
+        <span v-if="expanded">
+          <p>
+            This is an experimental playground, it may be buggy. If it freezes or otherwise seems slow try uploading a smaller file. Only text files (.txt), audio files (.mp3, .wav, etc.) and image files (.jpg, .png, .gif, etc) are supported.
+          </p>
+          <h3>TEXT/BYTE EDITOR</h3>
+          <p>
+            There is a drop down menu (top right of the EDITOR) which lets you switch between a traditional "text editor" (ASCII/UTF-8) where each byte in the raw data of the uploaded file is interpreted as it's corresponding ASCII or Unicode character. This is essentially the same thing that happens when you open an image or other media file in your own text editor. You can "databend" the file by editing the ASCII text as you would in your own text editor and the AUDIO PLAYER and IMAGE VIEWER will update automatically. <br><br> When you switch the drop down menu to either "hex", "decimal" or "binary" the TEXT EDITOR becomes a BYTE EDITOR. You can navigate through the file using the "◀◀" and "▶▶" buttons, and when in "hex" mode you can also edit the bytes and the AUDIO PLAYER and IMAGE VIEWER will automatically update (note: hex, decimal and binary are all just different ways of representing the same value, see the <a href="machine-code.html">machine code</a> appendix to gain a better understanding).
+          </p>
+          <h3>AUDIO PLAYER</h3>
+          <p>
+            When uploading an audio file, this player behaves like a normal audio player (it just plays the song when you press play and stops when you press stop). If you upload a text file the AUDIO PLAYER will create a sound buffer from the raw data in that text file. If you upload an image file, the AUDIO PLAYER gives you two options for how to listen to the image. The default is that it creates a sound buffer from the decoded image. This means rather than converting the raw bytes (of a compressed JPG file for example) into a sound buffer, it first decodes the image back into it's corresponding pixel values and then interprets those values as samples in an audio buffer. The other option is to convert the raw data (of a compressed image file) directly into an audio buffer.
+          </p>
+          <h3>IMAGE VIEWER</h3>
+          <p>
+            Similar to the AUDIO PLAYER, this behaves as expected when you upload an image file (it simply displays it), but when you upload a text file it will create a pixel array (r,g,b,r,g,b,etc) from the ASCII bytes in the text file. If you upload an audio file, you get two options similar to what you would get in the AUDIO PLAYER. The default is to view the decoded audio file, this means the compressed audio file (like an .mp3 for example) is decoded into it's audio buffer and from there each sample in the buffer is interpreted as a pixel. The other option is to convert the raw data (of the compressed audio file) directly into an array of pixels.
+          </p>
+        </span>
+        <a href="index.html">back to index</a>
+      </div>
+
+      <div class="sub-wrap">
+        <byte-editor :file="fileAlias" @bytes-updated="bytesUpdated($event)"></byte-editor>
+      </div>
+
+      <div class="sub-wrap">
+        <play-audio :file="file"></play-audio>
+      </div>
+
+      <div class="sub-wrap">
+        <display-image :file="file"></display-image>
+      </div>
+
+    </section>
+    <script src="js/libs/three.min.js"></script>
+    <script src="js/background.js"></script>
+    <script src="js/libs/vue.js"></script>
+    <script src="node_modules/FileUploader/FileUploader.js"></script>
+    <script src="js/components/components-utils.js"></script>
+    <script src="js/components/display-image.js"></script>
+    <script src="js/components/play-audio.js"></script>
+    <script src="js/components/byte-editor.js"></script>
+    <script>
+
+
+      const app = new Vue({
+        el: '#app',
+        data: {
+          uploader: null,
+          file: null,
+          fileAlias: null,
+          expanded: false,
+          expandText: 'You can click here to expand further instructions.'
+        },
+        mounted: function () {
+
+          this.uploader = new FileUploader({
+            click: '.clickable',
+            drop: '.bg',
+            filter: (type) => {
+              let audio = [
+                'audio/wav', 'audio/mpeg3', 'audio/mp4', 'audio/aac',
+                'audio/aacp', 'audio/ogg', 'audio/webm', 'audio/ogg',
+                'audio/webm', 'audio/mpeg']
+              let types = [ ...audio, 'text/plain' ]
+              if (type.indexOf('image') > -1) return true
+              else if (types.indexOf(type) > -1) return true
+              else return false
+            },
+            dropping: (e) => { e.style.opacity = 0.5 },
+            dropped: (e) => { e.style.opacity = 1 },
+            error: (message) => {
+              // TODO replace alert w/Error Box
+              alert(message)
+              console.error(message)
+            },
+            ready: (file) => {
+              this.file = file
+              this.fileAlias = file
+            }
+          })
+
+        },
+        methods: {
+          bytesUpdated (file) {
+            console.log(file);
+            this.file = file
+          },
+          toggleExpand () {
+            let open = 'You can click here to expand further instructions.'
+            let close = '[X] CLICK TO CLOSE INSTRUCTIONS'
+            this.expanded = !this.expanded
+            this.expandText = (this.expanded) ? close : open
+          }
+        }
+      })
+    </script>
+
+  </body>
+</html>
