@@ -40,10 +40,20 @@
         <p class="center">
           Glitch Art tools + tutorials by <a href="http://nickbriz.com" target="_blank">Nick Briz</a>
         </p>
+        <p style="display:none; color:#ff6188" id="note" class="center">
+          NOTE: the interactive tools work best in  <a href="https://www.mozilla.org/en-US/firefox/new/" target="_blank" alt="Firefox">Firefox</a>, you can still read all the tutorials using <span id="browser"></span> if you'd like, but Firefox is better for your <a href="https://internethealthreport.org/" target="_blank" alt="internet health">Internet health</a> so why not just download it? ✌(-‿-)
+        </p>
       </div>
 
     </section>
     <script src="js/libs/three.min.js"></script>
     <script src="js/background.js"></script>
+    <script src="node_modules/averigua/Averigua.js"></script>
+    <script>
+      if (Averigua.browserInfo().name !== 'Firefox') {
+        document.querySelector('#browser').textContent = Averigua.browserInfo().name
+        document.querySelector('#note').style.display = 'block'
+      }
+    </script>
   </body>
 </html>
