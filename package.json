@@ -18,6 +18,7 @@
   "homepage": "http://nickbriz.com/databending101/",
   "dependencies": {
     "FileUploader": "git+https://github.com/nbriz/FileUploader.git",
+    "averigua": "git+https://github.com/nbriz/Averigua.git",
     "huffmanextractor": "git+https://github.com/nbriz/HuffmanExtractor.git"
   }
 }
