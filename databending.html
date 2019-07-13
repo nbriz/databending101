@@ -21,6 +21,9 @@
         <h1> databending 101 </h1>
         <h2>step {{ sec + 1 }} /  {{sections.length}}</h2>
         <p> {{ sections[sec] }} </p>
+        <p v-if="browser !== 'Firefox' && sec > 1">
+          (NOTE: I'm doing some unconventional stuff in this section which works best in <a href="https://www.mozilla.org/en-US/firefox/new/" target="_blank" alt="Firefox">Firefox</a>, you could still follow along in {{ browser }}, things just might get buggy)
+        </p>
         <br><br>
         <div class="next-row">
           <div>
@@ -47,9 +50,10 @@
     </section>
     <script src="js/libs/three.min.js"></script>
     <script src="js/background.js"></script>
-    <script src="js/databendingscript.js"></script>
     <script src="js/libs/vue.js"></script>
     <script src="node_modules/FileUploader/FileUploader.js"></script>
+    <script src="node_modules/averigua/Averigua.js"></script>
+    <script src="js/databendingscript.js"></script>
     <script src="js/components/components-utils.js"></script>
     <script src="js/components/display-image.js"></script>
     <script src="js/components/play-audio.js"></script>
@@ -63,7 +67,8 @@
           file: null,
           fileAlias: null,
           charCnt: 0,
-          pasteCnt: 0
+          pasteCnt: 0,
+          browser: Averigua.browserInfo().name
         },
         methods: {
           loadCat () {
@@ -87,13 +92,22 @@
             let add = '>>>>>>__TRY__TYPING__IN__SOME__OF__YOUR__OWN__TEXT__HERE__:)__>>>>'
             let sub = add.substring(this.charCnt, this.charCnt + 1)
             let txt = this.$refs.editor.ascii
-            let i = txt.indexOf(`Ñd¼¶à¾÷`)
+            let i
+            if (Averigua.browserInfo().name === 'Chrome') {
+              i = txt.indexOf(`Ã±9¥ÃÅ`)
+            } else if (Averigua.browserInfo().name === 'Safari') {
+              i = txt.indexOf(`*¬>;Oàj¼`)
+            } else i = txt.indexOf(`Ñd¼¶à¾÷`)
             let t1 = txt.substring(0, i)
             let t2 = txt.substring(i)
             let ntxt = `${t1} ${sub} ${t2}`
             this.$refs.editor.$refs.ta.textContent = ntxt
             this.charCnt++
             this.$refs.editor.asciiEdited()
+            if (Averigua.browserInfo().name === 'Chrome') {
+              const te = document.querySelector('.be-ascii')
+              te.scrollTop = te.scrollHeight / 2
+            }
             if (this.charCnt < add.length) {
               setTimeout(() => this.addChar(), 200)
             }
