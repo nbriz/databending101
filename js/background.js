@@ -26,7 +26,7 @@ const plane = new THREE.Mesh(
   new THREE.PlaneBufferGeometry(2, 2, 1),
   new THREE.ShaderMaterial({
     uniforms: {
-      time: { type: 'f', value: 10.0 },
+      time: { type: 'f', value: 50000.0 },
       texture: { type: 't', value: pic }
     },
     vertexShader: `
