@@ -80,7 +80,7 @@ Vue.component('mapped-data', {
     updateCanvas () {
       let canvas = this.$refs.canvas
       let ctx = this.$refs.canvas.getContext('2d')
-      let scale = 50
+      let scale = 75
       canvas.width = 5 * scale
       canvas.height = 5 * scale
       let i = 0
@@ -90,10 +90,12 @@ Vue.component('mapped-data', {
           ctx.fillStyle = `rgb(${n},${n},${n})`
           ctx.fillRect(x * scale, y * scale, scale, scale)
           // ctx.fillStyle = '#fff'
-          // ctx.font = '10px Sans-Serif'
+          // ctx.font = '30px Sans-Serif'
           // ctx.textBaseline = 'top'
           // ctx.textAlign = 'left'
           // ctx.fillText(n, x * scale + scale / 4, y * scale + scale / 4)
+          // let image = canvas.toDataURL('image/png').replace('image/png', 'image/octet-stream')
+          // window.location.href = image
           i++
         }
       }
